@@ -4,7 +4,7 @@ use std::mem;
 use std::ops::{Index, IndexMut};
 use std::ptr::{self, NonNull};
 
-struct Pool<T> {
+pub struct Pool<T> {
     ptr: NonNull<T>,
     cap: usize,
     len: usize,
@@ -169,8 +169,8 @@ impl<T> IndexMut<usize> for Pool<T>{
     }
 }
 
-#[derive(Debug)]
-struct Variable<T>{
+#[derive(Debug,Clone)]
+pub struct Variable<T>{
     layout:alloc::Layout,
     ptr:NonNull<T>
 }
