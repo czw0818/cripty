@@ -1,6 +1,6 @@
 use crate::object::Object;
 
-use super::function::Func;
+use crate::lang::function::Func;
 pub type States = Vec<State>;
 pub enum Expr {
     Add(Object,Object),// +

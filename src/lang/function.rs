@@ -1,14 +1,15 @@
-use crate::object::Object;
-use super::{ast::States, types::CriptyType};
+use crate::object::{Object, clone};
+use super::types::CriptyType;
+use crate::ir::ast::States;
+use crate::runtime::VM;
 
-#[allow(dead_code)]
-pub type ReturnValue = Option<Object>;
 pub struct CriptyFunc{
     pub name:Option<String>,
     pub args:Vec<(Object,Box<dyn CriptyType>)>,
     pub states:States
 }
 impl CriptyFunc{
+    #[allow(dead_code)]
     fn new(name:Option<String>,args:Vec<(Object,Box<dyn CriptyType>)>,states:States) -> Self{
         Self{
             name,args,states
@@ -16,6 +17,9 @@ impl CriptyFunc{
     }
     fn clone(&self) -> Self{
         unsafe{std::ptr::read::<Self>(self as *const Self)}
+    }
+    fn call(&self,objs:Vec<Object>,vm:VM) -> Object{
+        vm.run_function(clone(&self.states),objs)
     }
 }
 impl Clone for CriptyFunc{
@@ -26,7 +30,17 @@ impl Clone for CriptyFunc{
 #[allow(dead_code)]
 pub enum Func{
     CriptyFunc(CriptyFunc),
-    RustFunc(
-        Box<dyn Fn(Vec<Object>) -> ReturnValue + 'static>
-    )
+    RustFunc(Box<dyn Fn(Vec<Object>) -> Object + 'static>)
+}
+impl Func{
+    pub fn call(&self,objs:Vec<Object>,vm:* mut VM) -> Object{
+        match self{
+            Self::RustFunc(func)=>{
+                (**func)(objs)
+            }
+            Self::CriptyFunc(func)=>{
+                func.call(objs,unsafe{clone(&*vm)})
+            }
+        }
+    }
 }
