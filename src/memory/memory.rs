@@ -12,7 +12,7 @@ struct Pool<T> {
 
 impl<T> Pool<T> {
     #[allow(dead_code)]
-    fn new() -> Self {
+    pub fn new() -> Self {
         // !0 等价于 usize::MAX， 这一段分支代码在编译期间就可以计算出结果返回的结果，返回给 cap
         let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
 
