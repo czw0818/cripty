@@ -11,6 +11,7 @@ struct Pool<T> {
 }
 
 impl<T> Pool<T> {
+    #[allow(dead_code)]
     fn new() -> Self {
         // !0 等价于 usize::MAX， 这一段分支代码在编译期间就可以计算出结果返回的结果，返回给 cap
         let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
@@ -24,7 +25,7 @@ impl<T> Pool<T> {
             _marker: PhantomData,
         }
     }
-
+    #[allow(dead_code)]
     fn grow(&mut self) {
         // 因为当 T 的尺寸为 0 时，我们设置了 cap 为 usize::MAX，
         // 这一步成立便意味着 Vec 溢出了.
@@ -64,9 +65,12 @@ impl<T> Pool<T> {
         };
         self.cap = new_cap;
     }
+    #[allow(dead_code)]
     fn cap(&self) -> usize{self.cap}
+    #[allow(dead_code)]
     fn len(&self) -> usize{self.len}
     fn ptr(&self) -> *mut T{self.ptr.as_ptr()}
+    #[allow(dead_code)]
     pub fn push(&mut self, elem: T) {
         if self.len == self.cap() {
             self.grow();
@@ -88,7 +92,7 @@ impl<T> Pool<T> {
             unsafe { Some(ptr::read(self.ptr().add(self.len))) }
         }
     }
-
+    #[allow(dead_code)]
     pub fn insert(&mut self, index: usize, elem: T) {
         assert!(index <= self.len, "index out of bounds");
         if self.cap() == self.len {
@@ -105,7 +109,7 @@ impl<T> Pool<T> {
             self.len += 1;
         }
     }
-
+    #[allow(dead_code)]
     pub fn remove(&mut self, index: usize) -> T {
         assert!(index < self.len, "index out of bounds");
         unsafe {
@@ -144,6 +148,7 @@ struct Variable<T>{
 }
 
 impl<T> Variable<T>{
+    #[allow(dead_code)]
     pub fn new() -> Self{
         assert!(std::mem::size_of::<T>()!=0);
         let new_layout = alloc::Layout::new::<T>();
@@ -154,10 +159,12 @@ impl<T> Variable<T>{
         }
     }
     #[inline(always)]
+    #[allow(dead_code)]
     pub unsafe fn read(&self) -> T{
         ptr::read::<T>(self.ptr.as_ptr())
     } 
     #[inline(always)]
+    #[allow(dead_code)]
     pub fn write(&self,sth:T){
         unsafe{ptr::write(self.ptr.as_ptr(),sth)}
     }
