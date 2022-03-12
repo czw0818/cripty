@@ -1,6 +1,7 @@
 use std::alloc::{self, Layout};
 use std::marker::PhantomData;
 use std::mem;
+use std::ops::{Index, IndexMut};
 use std::ptr::{self, NonNull};
 
 struct Pool<T> {
@@ -123,6 +124,20 @@ impl<T> Pool<T> {
             result
         }
     }
+    #[allow(dead_code)]
+    pub fn set(&mut self, index: usize, elem: T) -> Result<(),&'static str> {
+        if index <= self.len{
+            return Err("index out of bounds");
+        }
+        Ok(unsafe{ptr::write(self.ptr().add(index),elem)})
+    }
+    #[allow(dead_code)]
+    pub fn get(&self, index: usize) -> Result<T,&'static str>{
+        if index <= self.len{
+            return Err("index out of bounds");
+        }
+        Ok(unsafe{ptr::read(self.ptr().add(index))})
+    }
 }
 
 impl<T> Drop for Pool<T> {
@@ -138,6 +153,19 @@ impl<T> Drop for Pool<T> {
                 );
             }
         }
+    }
+}
+impl<T> Index<usize> for Pool<T>{
+    type Output = T;
+    fn index(&self,index:usize) -> &T{
+        assert!(index <= self.len);
+        unsafe{&*(self.ptr().add(index) as *mut T)}
+    }
+}
+impl<T> IndexMut<usize> for Pool<T>{
+    fn index_mut(&mut self,index:usize) -> &mut T{
+        assert!(index <= self.len);
+        unsafe{&mut *(self.ptr().add(index) as *mut T)}
     }
 }
 
