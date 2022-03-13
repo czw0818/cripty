@@ -16,6 +16,7 @@ pub enum Expr {
     For(Object,States),
     While(Box<Expr>,States),
     Loop(States),
+    Call(* mut Func),
     Fn(Func)
 }
 pub enum State{

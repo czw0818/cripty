@@ -1,6 +1,4 @@
 use std::collections::hash_map::HashMap;
-use std::ops::RangeBounds;
-use std::ptr::NonNull;
 
 use crate::ir::ast::{State,Expr};
 use crate::memory::memory::Pool;
@@ -39,9 +37,10 @@ impl VM{
     #[allow(dead_code)]
     pub fn run_function(&self,state:States,_args:Vec<Object>) -> Object{
         let mut scope = Scope::new();
-        let arg_number = 0;
+        let mut arg_number = 0;
         for v in _args.into_iter(){
-            scope.set(format!("{}",arg_number), v)
+            scope.set(arg_number, v);
+            arg_number+=1;
         }
         self.run_code(state,scope)
     }
@@ -50,13 +49,22 @@ impl VM{
             Expr::Add(lobj,robj) =>{
                 clone(lobj)+clone(robj)
             },
+            Expr::Sub(lobj,robj) =>{
+                clone(lobj)-clone(robj)
+            }
+            Expr::Mul(lobj,robj) =>{
+                clone(lobj)*clone(robj)
+            }
+            Expr::Div(lobj,robj) =>{
+                clone(lobj)/clone(robj)
+            }
             _ => todo!()
         }
     }
 }
 #[allow(dead_code)]
-struct Scope(Pool<Object>,HashMap<String,usize>,Vec<usize>,u8);
-impl Scope{
+struct NameSpace(Pool<Object>,HashMap<String,usize>,Vec<usize>,u8);
+impl NameSpace{
     fn new() -> Self{
         Self(Pool::new(),HashMap::new(),(1..10).collect(),1)
     }
@@ -92,6 +100,17 @@ impl Scope{
         let index = *self.1.get(&name).unwrap();
         HashMap::remove(&mut self.1, &name);
         self.2.push(index)
+    }
+}
+
+struct Scope(Pool<Object>);
+impl Scope{
+    fn new() -> Self{Self(Pool::new())}
+    fn get(&self,index:usize) -> Object{
+        self.0.get(index).unwrap_or_else(|_|{traceback(format!("failed in geting {}",index))})
+    }
+    fn set(&mut self,index:usize,elem:Object){
+        self.0.set(index, elem).unwrap_or_else(|_|{traceback(format!("failed in setting {}",index))})
     }
 }
 fn traceback(info:String) -> !{panic!("{}",info)}
