@@ -125,7 +125,7 @@ impl<T> Pool<T> {
         }
     }
     #[allow(dead_code)]
-    pub fn set(&mut self, index: usize, elem: T) -> Result<(),&'static str> {
+    pub fn set(&self, index: usize, elem: T) -> Result<(),&'static str> {
         if index <= self.len{
             return Err("index out of bounds");
         }

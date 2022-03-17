@@ -154,4 +154,12 @@ impl<T:PartialOrd> CriptyObj for Vec<T>{
         }
     }
 }
+impl CriptyObj for bool{
+    fn field(&self,_:u8) -> Object{
+        ().into()
+    }
+    fn methods(&self,_:i16) -> Func{
+        todo!()
+    }
+}
 use std::ptr::{read, write};

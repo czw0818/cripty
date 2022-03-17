@@ -3,6 +3,7 @@ use crate::object::Object;
 use crate::lang::function::Func;
 pub type States = Vec<State>;
 pub enum Expr {
+    Bool(bool),
     Add(Object,Object),// +
     Sub(Object,Object),// -
     Mul(Object,Object),// *
@@ -10,6 +11,8 @@ pub enum Expr {
     POW(Object,Object),// ^ **
     LMO(Object,Object),// <<
     RMO(Object,Object),// >>
+    Eq(Object,Object),// ==
+    Ne(Object,Object),// !=
     If(Box<Expr>,States),
     Elif(Box<Expr>,States),
     Else(States),
@@ -24,5 +27,5 @@ pub enum State{
     Return(Vec<Object>),
     Break(Object),
     Contine,
-    Let(String,Object),
+    Let(usize,Object),
 }

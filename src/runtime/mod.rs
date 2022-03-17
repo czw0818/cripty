@@ -18,17 +18,32 @@ impl VM{
     }
     #[allow(dead_code)]
     fn run(&self){
+        let scope = Scope::new();
         for code in self.run.iter(){
             match code{
                 State::Expr(expr) => {self.expr(expr);},
+                State::Let(sth,value)=>{
+                    scope.set(*sth,clone(value))
+                },
                 _ => todo!()
             }
         }
     }
     fn run_code(&self,code:States,scope:Scope) -> Object{
+        // run code which in the function
         for code in code{
             match code{
                 State::Expr(exp) => {self.expr(&exp);},
+                State::Let(sth,value)=>{
+                    scope.set(sth,value)
+                },
+                State::Return(objs)=>{
+                    let value = objs.len();
+                    for obj in objs{
+                        immut_to_mut(self).stack.push(obj)
+                    }
+                    return Box::new(value);
+                }
                 _ => todo!()
             }
         }
@@ -36,7 +51,7 @@ impl VM{
     }
     #[allow(dead_code)]
     pub fn run_function(&self,state:States,_args:Vec<Object>) -> Object{
-        let mut scope = Scope::new();
+        let scope = Scope::new();
         let mut arg_number = 0;
         for v in _args.into_iter(){
             scope.set(arg_number, v);
@@ -57,6 +72,11 @@ impl VM{
             }
             Expr::Div(lobj,robj) =>{
                 clone(lobj)/clone(robj)
+            }
+            Expr::If(cond,states) => {
+                if self.expr(cond)==Box::new(true){
+                    self.run_code(states, scope)
+                }
             }
             _ => todo!()
         }
@@ -109,8 +129,13 @@ impl Scope{
     fn get(&self,index:usize) -> Object{
         self.0.get(index).unwrap_or_else(|_|{traceback(format!("failed in geting {}",index))})
     }
-    fn set(&mut self,index:usize,elem:Object){
+    fn set(&self,index:usize,elem:Object){
         self.0.set(index, elem).unwrap_or_else(|_|{traceback(format!("failed in setting {}",index))})
+    }
+}
+fn immut_to_mut<T>(s:&T) -> &mut T{
+    unsafe{
+        &mut *(s as *const T as *mut T)  
     }
 }
 fn traceback(info:String) -> !{panic!("{}",info)}
