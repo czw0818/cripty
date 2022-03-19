@@ -1,6 +1,7 @@
 # cripty(Developing)
 
-Cripty is a programming language which is designed to be high performance,rich ecological.
+Cripty is a toy programming language without grammar by now.
+We hope to make a programming language that supports mixed programming.It has high performance.
 
 ## 🎖️ Status
 
@@ -13,3 +14,4 @@ Cripty is not currently available, I will slowly implement all its basic functio
 - [ ] Bytecode
 - [ ] Bytecode interpreter
 - [ ] standard library
+- [ ] LLVM compiler

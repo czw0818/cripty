@@ -1,23 +1,54 @@
 use std::{
     ops::{Add,Sub,Mul, Div},
-    ptr::NonNull
+    ptr::{NonNull,read},
 };
-
 use crate::lang::function::Func;
-pub type Object = Box<dyn CriptyObj>;
+#[derive(Clone)]
+pub struct Object(NonNull<dyn CriptyObj>);
+impl Object{
+    pub fn new(v:Box<dyn CriptyObj>) -> Self{
+        Self(NonNull::new(v.as_ptr() as * mut _).unwrap())
+    }
+    /// the 'castdown()' can turn Object into some rust type
+    /// '''
+    /// let a = Object::new(1u8);
+    /// assert!(a.castdown::<u8>,1)
+    /// '''
+    pub unsafe fn castdown<T>(&self) -> &T{
+        self.0.as_ref().castdown::<T>()
+    }
+    pub fn null() -> Self{
+        Self(NonNull::new(&mut () as * mut() ).unwrap())
+    }
+    pub fn method(&self,index:i16) -> Func{
+        unsafe{self.0.as_ref().methods(index)}
+    }
+    pub fn get(&self) -> Box<dyn CriptyObj>{
+        unsafe{
+            Box::from_raw(self.0.as_ptr())
+        }
+    }
+    pub fn clone(&self) -> Self{
+        Self(self.0.clone())
+    }
+    pub fn deref(&self) -> Self{
+        unsafe{read(self)}
+    }
+}
+// to make function easier
+pub fn easy_castdown<T>(objs:&Vec<Object>,index:usize) -> Result<T,()>{
+    let obj = objs.get(index).ok_or(())?;
+    unsafe{Ok(read(obj.castdown::<T>()))}
+}
+//impl Deref for Object{
+//    type Target = Self;
+//    fn deref(&self) -> &Self{
+//        self
+//    }
+//}
 pub trait CriptyObj{
     fn field(&self,index:u8) -> Object;
     fn methods(&self,index:i16) -> Func;
-}
-pub trait Castdown{
-    fn down<T>(&self) -> &T;
-}
-impl Castdown for Object{
-    fn down<T>(&self) -> &T{
-        unsafe{
-            (**self).castdown::<T>()
-        }
-    }
 }
 impl dyn CriptyObj{
     pub unsafe fn castdown<T>(&self) -> &T{
@@ -29,36 +60,32 @@ impl dyn CriptyObj{
     pub fn as_ptr(&self) -> *const Self{
         self
     }
+    pub fn as_mut_ptr(&mut self) -> *mut Self{
+        self
+    }
 }
+
 impl Add for Object{
     type Output = Object;
     fn add(self,rhs:Object) -> Object{
-        self.methods(1).call(vec![self,rhs],NonNull::dangling().as_ptr())
+        self.get().methods(1).call(vec![self,rhs], std::ptr::null_mut())
     }
 }
 impl Sub for Object{
     type Output = Object;
     fn sub(self,rhs:Object) -> Object{
-        self.methods(2).call(vec![self,rhs],NonNull::dangling().as_ptr())
+        self.get().methods(2).call(vec![self,rhs], std::ptr::null_mut())
     }
 }
 impl Mul for Object{
     type Output = Object;
     fn mul(self,rhs:Object) -> Object{
-        self.methods(3).call(vec![self,rhs],NonNull::dangling().as_ptr())
+        self.get().methods(3).call(vec![self,rhs], std::ptr::null_mut())
     }
 }
 impl Div for Object{
     type Output = Object;
     fn div(self,rhs:Object) -> Object{
-        self.methods(4).call(vec![self,rhs],NonNull::dangling().as_ptr())
+        self.get().methods(4).call(vec![self,rhs], std::ptr::null_mut())
     }
-}
-pub fn clone<T>(obj:&T) -> T{
-    unsafe{std::ptr::read::<T>(obj as * const T)}
-}
-use std::ptr::read;
-pub fn cast_quilkly<T>(this:&Vec<Object>,index:u8) -> T{
-    let elem = unsafe{read(this.get(index as usize).unwrap())};
-    unsafe{read(elem.castdown::<T>())}
 }

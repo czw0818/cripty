@@ -1,4 +1,4 @@
-use crate::object::{Object, clone};
+use crate::object::{Object};
 use super::types::CriptyType;
 use crate::ir::ast::States;
 use crate::runtime::VM;
@@ -12,14 +12,16 @@ impl CriptyFunc{
     #[allow(dead_code)]
     fn new(name:Option<String>,args:Vec<(Object,Box<dyn CriptyType>)>,states:States) -> Self{
         Self{
-            name,args,states
+            name,
+            args,
+            states:states
         }
     }
     fn clone(&self) -> Self{
         unsafe{std::ptr::read::<Self>(self as *const Self)}
     }
-    fn call(&self,objs:Vec<Object>,vm:VM) -> Object{
-        vm.run_function(clone(&self.states),objs)
+    fn call(&self,objs:Vec<Object>,vm:&VM) -> Object{
+        vm.run_function(self.states.clone(),objs)
     }
 }
 impl Clone for CriptyFunc{
@@ -39,8 +41,13 @@ impl Func{
                 (**func)(objs)
             }
             Self::CriptyFunc(func)=>{
-                func.call(objs,unsafe{clone(&*vm)})
+                func.call(objs,unsafe{&*vm})
             }
         }
+    }
+}
+impl Clone for Func{
+    fn clone(&self) -> Self{
+        unsafe{std::ptr::read(self)}
     }
 }

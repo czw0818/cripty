@@ -2,7 +2,6 @@ use std::collections::hash_map::HashMap;
 
 use crate::ir::ast::{State,Expr};
 use crate::memory::memory::Pool;
-use crate::object::clone;
 use crate::{builtin::builtin::Object, ir::ast::States};
 
 pub struct VM{
@@ -23,7 +22,7 @@ impl VM{
             match code{
                 State::Expr(expr) => {self.expr(expr);},
                 State::Let(sth,value)=>{
-                    scope.set(*sth,clone(value))
+                    scope.set(*sth,value.deref())
                 },
                 _ => todo!()
             }
@@ -42,12 +41,12 @@ impl VM{
                     for obj in objs{
                         immut_to_mut(self).stack.push(obj)
                     }
-                    return Box::new(value);
+                    return Object::new(Box::new(value));
                 }
                 _ => todo!()
             }
         }
-        Box::new(())
+        Object::null()
     }
     #[allow(dead_code)]
     pub fn run_function(&self,state:States,_args:Vec<Object>) -> Object{
@@ -59,24 +58,22 @@ impl VM{
         }
         self.run_code(state,scope)
     }
-    fn expr(&self,expr:&Expr) -> Object{
+    pub fn expr(&self,expr:&Expr) -> Object{
         match expr{
             Expr::Add(lobj,robj) =>{
-                clone(lobj)+clone(robj)
+                lobj.deref()+robj.deref()
             },
             Expr::Sub(lobj,robj) =>{
-                clone(lobj)-clone(robj)
+                lobj.deref()-robj.deref()
             }
             Expr::Mul(lobj,robj) =>{
-                clone(lobj)*clone(robj)
+                lobj.deref()*robj.deref()
             }
             Expr::Div(lobj,robj) =>{
-                clone(lobj)/clone(robj)
+                (lobj.deref())/(robj.deref())
             }
             Expr::If(cond,states) => {
-                if self.expr(cond)==Box::new(true){
-                    self.run_code(states, scope)
-                }
+                unimplemented!()
             }
             _ => todo!()
         }

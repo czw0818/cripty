@@ -1,14 +1,14 @@
-use crate::object::cast_quilkly;
-pub use crate::object::{CriptyObj, Object,clone};
+pub use crate::object::{CriptyObj, Object,easy_castdown};
 pub use crate::lang::function::Func;
 macro_rules! add {
     ($tr:ty) => {
         Func::RustFunc(Box::new(|objs:Vec<Object>|{
+            dbg!("add function");
             assert!(objs.len()==2);
             let mut itera = objs.into_iter();
             let one = itera.next().unwrap();
             let two = itera.next().unwrap();
-            unsafe{Box::new(one.castdown::<$tr>()+two.castdown())}
+            Object::new(unsafe{Box::new(one.castdown::<$tr>()+two.castdown())})
         }))
     }
 }
@@ -19,7 +19,7 @@ macro_rules! sub {
             let mut itera = objs.into_iter();
             let one = itera.next().unwrap();
             let two = itera.next().unwrap();
-            unsafe{Box::new(one.castdown::<$tr>()-two.castdown())}
+            Object::new(unsafe{Box::new(one.castdown::<$tr>()-two.castdown())})
         }))
     }
 }
@@ -30,7 +30,7 @@ macro_rules! mul {
             let mut itera = objs.into_iter();
             let one = itera.next().unwrap();
             let two = itera.next().unwrap();
-            unsafe{Box::new(one.castdown::<$tr>()*two.castdown())}
+            Object::new(unsafe{Box::new(one.castdown::<$tr>()*two.castdown())})
         }))
     }
 }
@@ -41,7 +41,7 @@ macro_rules! div {
             let mut itera = objs.into_iter();
             let one = itera.next().unwrap();
             let two = itera.next().unwrap();
-            unsafe{Box::new(one.castdown::<$tr>()/two.castdown())}
+            Object::new(unsafe{Box::new(one.castdown::<$tr>()/two.castdown())})
         }))
     }
 }
@@ -56,7 +56,7 @@ macro_rules! impl_obj {
             fn methods(&self,index:i16) -> Func{
                 match index{
                     0 => {
-                        Func::RustFunc(Box::new(|_|{Box::new(())}))
+                        Func::RustFunc(Box::new(|_|{Object::null()}))
                     }
                     1 => {
                         add!($tr)
@@ -75,9 +75,9 @@ macro_rules! impl_obj {
                             let a:$tr=0;
                             for i in objs{
                                 #[allow(unused_variables)]
-                                let a = unsafe{(*i).castdown::<$tr>().max(&a)};
+                                let a = unsafe{i.castdown::<$tr>().max(&a)};
                             }
-                            Box::new(a)
+                            Object::new(Box::new(a))
                         }
                         Func::RustFunc(Box::new(max))
                     },
@@ -118,10 +118,10 @@ impl CriptyObj for (){
 }
 impl<T:CriptyObj+'static> From<T> for Object{
     fn from(s:T) -> Self{
-        Box::new(s)
+        Object::new(Box::new(s))
     }
 }
-impl<T:PartialOrd> CriptyObj for Vec<T>{
+impl<T> CriptyObj for Vec<T>{
     fn field(&self,_:u8) -> Object{
         ().into()
     }
@@ -131,7 +131,7 @@ impl<T:PartialOrd> CriptyObj for Vec<T>{
                 let len = self.len();
                 Func::RustFunc(
                     Box::new(
-                        move |_|{Box::new(len)}
+                        move |_|{Object::new(Box::new(len))}
                     )
                 )
             }
@@ -139,9 +139,9 @@ impl<T:PartialOrd> CriptyObj for Vec<T>{
                 Func::RustFunc(
                     Box::new(
                         |this:Vec<Object>|{
-                            let vec = cast_quilkly::<Vec<T>>(&this, 0);
-                            let first = cast_quilkly::<usize>(&this,1);
-                            let twice =cast_quilkly::<usize>(&this,2);
+                            let vec = easy_castdown::<Vec<T>>(&this, 0).unwrap();
+                            let first = easy_castdown::<usize>(&this,1).unwrap();
+                            let twice =easy_castdown::<usize>(&this,2).unwrap();
                             let (one,two)=unsafe{(read(vec.as_ptr().add(first)),read(vec.as_ptr().add(twice)))};
                             unsafe{write(vec.as_ptr().add(first) as *mut _,two);
                             write(vec.as_ptr().add(twice) as *mut _,one);}
