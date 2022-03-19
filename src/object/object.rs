@@ -2,6 +2,7 @@ use std::{
     ops::{Add,Sub,Mul, Div},
     ptr::{NonNull,read},
 };
+use std::cmp::Ordering;
 use crate::lang::function::Func;
 #[derive(Clone)]
 pub struct Object(NonNull<dyn CriptyObj>);
@@ -34,6 +35,9 @@ impl Object{
     pub fn deref(&self) -> Self{
         unsafe{read(self)}
     }
+    pub fn bool(&self) -> bool{
+        unsafe{&*self.0.as_ptr()}.bool()
+    }
 }
 // to make function easier
 pub fn easy_castdown<T>(objs:&Vec<Object>,index:usize) -> Result<T,()>{
@@ -49,6 +53,9 @@ pub fn easy_castdown<T>(objs:&Vec<Object>,index:usize) -> Result<T,()>{
 pub trait CriptyObj{
     fn field(&self,index:u8) -> Object;
     fn methods(&self,index:i16) -> Func;
+    fn bool(&self) -> bool{
+        false
+    }
 }
 impl dyn CriptyObj{
     pub unsafe fn castdown<T>(&self) -> &T{
@@ -87,5 +94,22 @@ impl Div for Object{
     type Output = Object;
     fn div(self,rhs:Object) -> Object{
         self.get().methods(4).call(vec![self,rhs], std::ptr::null_mut())
+    }
+}
+impl PartialEq for Object{
+    fn eq(&self, other: &Self) -> bool{
+        let o = self.get().methods(5).call(vec![self.deref(),other.deref()], std::ptr::null_mut());
+        o.bool()
+    }
+}
+impl PartialOrd for Object{
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering>{
+        let o = self.get().methods(6).call(vec![self.deref(),other.deref()], std::ptr::null_mut());// u8
+        match unsafe{o.castdown::<u8>()}{
+            0 => Some(Ordering::Greater),
+            1 => Some(Ordering::Equal),
+            2 => Some(Ordering::Less),
+            _ => None
+        }
     }
 }

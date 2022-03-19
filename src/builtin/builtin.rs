@@ -71,16 +71,24 @@ macro_rules! impl_obj {
                         div!($tr)
                     }
                     5 => {
-                        fn max(objs:Vec<Object>) -> Object{
-                            let a:$tr=0;
-                            for i in objs{
-                                #[allow(unused_variables)]
-                                let a = unsafe{i.castdown::<$tr>().max(&a)};
-                            }
-                            Object::new(Box::new(a))
+                        fn eq(objs:Vec<Object>) -> Object{
+                            Object::new(Box::new(easy_castdown::<$tr>(&objs,0) == easy_castdown(&objs,1)))
                         }
-                        Func::RustFunc(Box::new(max))
+                        Func::RustFunc(Box::new(eq))
                     },
+                    6 => {
+                        fn cmp(objs:Vec<Object>) -> Object{
+                            Object::new(Box::new(
+                                if easy_castdown::<$tr>(&objs,0) > easy_castdown(&objs,1){
+                                    0
+                                }else if easy_castdown::<$tr>(&objs,0) == easy_castdown(&objs,1){
+                                    1
+                                }else{
+                                    2
+                                }))
+                        }
+                        Func::RustFunc(Box::new(cmp))
+                    }
                     _ => panic!()
                 }
             }
@@ -105,7 +113,21 @@ impl CriptyObj for String{
         todo!()
     }
 }
-
+impl CriptyObj for bool{
+    fn field(&self,_:u8) -> Object{
+        ().into()
+    }
+    fn methods(&self,index:i16) -> Func{
+        todo!()
+    }
+    fn bool(&self) -> bool{
+        if *self{
+            true
+        }else{
+            false
+        }
+    }
+}
 impl CriptyObj for (){
     fn field(&self,_:u8) -> Object{
         //你要访问这个干嘛啊你
@@ -152,14 +174,6 @@ impl<T> CriptyObj for Vec<T>{
             }
             _=>panic!()
         }
-    }
-}
-impl CriptyObj for bool{
-    fn field(&self,_:u8) -> Object{
-        ().into()
-    }
-    fn methods(&self,_:i16) -> Func{
-        todo!()
     }
 }
 use std::ptr::{read, write};

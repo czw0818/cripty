@@ -4,7 +4,8 @@ use crate::lang::function::Func;
 pub type States = Vec<State>;
 #[derive(Clone)]
 pub enum Expr {
-    Bool(bool),
+    Read(u8),
+    Bool(Object),
     Add(Object,Object),// +
     Sub(Object,Object),// -
     Mul(Object,Object),// *
@@ -14,10 +15,10 @@ pub enum Expr {
     RMO(Object,Object),// >>
     Eq(Object,Object),// ==
     Ne(Object,Object),// !=
-    Morethan(Object,Object),
-    Lessthan(Object,Object),
-    MoreEq(Object,Object),
-    LessEq(Object,Object),
+    Morethan(Object,Object),// >
+    Lessthan(Object,Object),// <
+    MoreEq(Object,Object),// >=
+    LessEq(Object,Object),// <=
     If(Box<Expr>,States),
     Elif(Box<Expr>,States),
     Else(States),

@@ -1,5 +1,4 @@
 use crate::object::{CriptyObj,Object};
-
 pub trait CriptyType{
     fn typeid(&self) -> u8;
     fn to_string(&self) -> String{

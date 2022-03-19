@@ -1,7 +1,7 @@
 use crate::object::{Object};
 use super::types::CriptyType;
 use crate::ir::ast::States;
-use crate::runtime::VM;
+use crate::runtime::ast_inter::VM;
 
 pub struct CriptyFunc{
     pub name:Option<String>,
