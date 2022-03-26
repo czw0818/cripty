@@ -1,5 +1,5 @@
 use crate::object::{Object};
-use crate::types::{CriptyType, Typeid};
+use crate::types::Typeid;
 use crate::ir::ast::States;
 use crate::runtime::ast_inter::VM;
 
