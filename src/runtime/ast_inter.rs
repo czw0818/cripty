@@ -2,7 +2,7 @@ use std::cell::RefCell;
 
 use crate::ir::ast::{State,Expr};
 use super::Scope;
-use crate::{builtin::builtin::Object, ir::ast::States};
+use crate::{Object, States};
 
 pub struct VM{
     pub stack:RefCell<Vec<Object>>,
@@ -41,7 +41,7 @@ impl VM{
                     for obj in objs{
                         self.stack.borrow_mut().push(obj)
                     }
-                    return Object::new(Box::new(value));
+                    return Object::new(value);
                 }
                 _ => todo!()
             }

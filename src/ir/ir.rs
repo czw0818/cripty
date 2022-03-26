@@ -1,4 +1,4 @@
-use crate::builtin::builtin::Object;
+use crate::Object;
 
 #[allow(dead_code)]
 #[derive(Clone)]

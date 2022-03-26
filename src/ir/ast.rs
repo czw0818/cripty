@@ -1,6 +1,5 @@
-use crate::object::Object;
+use crate::{Func,Object};
 
-use crate::lang::function::Func;
 pub type States = Vec<State>;
 #[derive(Clone)]
 pub enum Expr {

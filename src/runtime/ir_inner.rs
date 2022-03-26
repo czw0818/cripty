@@ -1,6 +1,6 @@
 use std::{ ptr::NonNull, mem::forget, cell::Cell};
 
-use crate::{builtin::builtin::Object, memory::memory::Pool, ir::ir::IR};
+use crate::{Object, memory::memory::Pool, IR};
 
 #[derive(Debug,Clone)]
 struct VM{
@@ -84,22 +84,22 @@ impl VM{
             IR::EQ =>{
                 let one = stack.pop().ok_or(())?;
                 let two = stack.pop().ok_or(())?;
-                stack.push(Object::new(Box::new(one==two)))
+                stack.push(Object::new(one==two))
             }
             IR::NE =>{
                 let one = stack.pop().ok_or(())?;
                 let two = stack.pop().ok_or(())?;
-                stack.push(Object::new(Box::new(one!=two)))
+                stack.push(Object::new(one!=two))
             }
             IR::MORE => {
                 let one = stack.pop().ok_or(())?;
                 let two = stack.pop().ok_or(())?;
-                stack.push(Object::new(Box::new(one>two)))
+                stack.push(Object::new(one>two))
             }
             IR::LESS => {
                 let one = stack.pop().ok_or(())?;
                 let two = stack.pop().ok_or(())?;
-                stack.push(Object::new(Box::new(one<two)))
+                stack.push(Object::new(one<two))
             }
             _ => {}
         }

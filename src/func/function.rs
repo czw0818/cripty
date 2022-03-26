@@ -1,16 +1,16 @@
 use crate::object::{Object};
-use super::types::CriptyType;
+use crate::types::{CriptyType, Typeid};
 use crate::ir::ast::States;
 use crate::runtime::ast_inter::VM;
 
 pub struct CriptyFunc{
     pub name:Option<String>,
-    pub args:Vec<(Object,Box<dyn CriptyType>)>,
+    pub args:Vec<(Object,Typeid)>,
     pub states:States
 }
 impl CriptyFunc{
     #[allow(dead_code)]
-    fn new(name:Option<String>,args:Vec<(Object,Box<dyn CriptyType>)>,states:States) -> Self{
+    fn new(name:Option<String>,args:Vec<(Object,Typeid)>,states:States) -> Self{
         Self{
             name,
             args,

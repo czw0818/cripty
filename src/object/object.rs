@@ -1,25 +1,34 @@
 use std::{
     ops::{Add,Sub,Mul, Div},
-    ptr::{NonNull,read},
+    ptr::{NonNull,read}, mem::forget
 };
+
 use std::cmp::Ordering;
-use crate::lang::function::Func;
+use crate::{Func, types::{Typeid, CriptyType, TypeError}};
 #[derive(Clone)]
-pub struct Object(NonNull<dyn CriptyObj>);
+pub struct Object(NonNull<dyn CriptyObj>,Typeid);
 impl Object{
-    pub fn new(v:Box<dyn CriptyObj>) -> Self{
-        Self(NonNull::new(v.as_ptr() as * mut _).unwrap())
+    pub fn new<T:CriptyObj+CriptyType+'static>(value:T) -> Self{
+        let v = &value as *const T as *mut T;
+        forget(value);
+        Self(NonNull::new(v).unwrap(),T::typeid())
     }
     /// the 'castdown()' can turn Object into some rust type
     /// '''
     /// let a = Object::new(1u8);
     /// assert!(a.castdown::<u8>,1)
     /// '''
-    pub unsafe fn castdown<T>(&self) -> &T{
+    pub unsafe fn castdown_uncheck<T>(&self) -> &T{
         self.0.as_ref().castdown::<T>()
     }
+    pub fn castdown<T:CriptyType>(&self) -> Result<&T,Box<dyn TypeError>>{
+        if !(T::typeid()==self.1){
+            return Err(Box::new(()));
+        }
+        unsafe{Ok(self.castdown_uncheck())}
+    }
     pub fn null() -> Self{
-        Self(NonNull::new(&mut () as * mut() ).unwrap())
+        Self(NonNull::new(&mut () as * mut() ).unwrap(),Typeid::Null)
     }
     pub fn method(&self,index:i16) -> Func{
         unsafe{self.0.as_ref().methods(index)}
@@ -30,7 +39,7 @@ impl Object{
         }
     }
     pub fn clone(&self) -> Self{
-        Self(self.0.clone())
+        Self(self.0.clone(),self.1.clone())
     }
     pub fn deref(&self) -> Self{
         unsafe{read(self)}
@@ -42,7 +51,7 @@ impl Object{
 // to make function easier
 pub fn easy_castdown<T>(objs:&Vec<Object>,index:usize) -> Result<T,()>{
     let obj = objs.get(index).ok_or(())?;
-    unsafe{Ok(read(obj.castdown::<T>()))}
+    unsafe{Ok(read(obj.castdown_uncheck::<T>()))}
 }
 //impl Deref for Object{
 //    type Target = Self;
@@ -105,7 +114,7 @@ impl PartialEq for Object{
 impl PartialOrd for Object{
     fn partial_cmp(&self, other: &Self) -> Option<Ordering>{
         let o = self.get().methods(6).call(vec![self.deref(),other.deref()], std::ptr::null_mut());// u8
-        match unsafe{o.castdown::<u8>()}{
+        match unsafe{o.castdown_uncheck::<u8>()}{
             0 => Some(Ordering::Greater),
             1 => Some(Ordering::Equal),
             2 => Some(Ordering::Less),

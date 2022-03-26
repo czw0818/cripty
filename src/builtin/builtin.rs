@@ -1,5 +1,6 @@
-pub use crate::object::{CriptyObj, Object,easy_castdown};
-pub use crate::lang::function::Func;
+use crate::object::easy_castdown;
+use crate::types::CriptyType;
+use crate::{Object,CriptyObj,Func};
 macro_rules! add {
     ($tr:ty) => {
         Func::RustFunc(Box::new(|objs:Vec<Object>|{
@@ -8,7 +9,7 @@ macro_rules! add {
             let mut itera = objs.into_iter();
             let one = itera.next().unwrap();
             let two = itera.next().unwrap();
-            Object::new(unsafe{Box::new(one.castdown::<$tr>()+two.castdown())})
+            Object::new(unsafe{one.castdown_uncheck::<$tr>()+two.castdown_uncheck()})
         }))
     }
 }
@@ -19,7 +20,7 @@ macro_rules! sub {
             let mut itera = objs.into_iter();
             let one = itera.next().unwrap();
             let two = itera.next().unwrap();
-            Object::new(unsafe{Box::new(one.castdown::<$tr>()-two.castdown())})
+            Object::new(unsafe{one.castdown_uncheck::<$tr>()-two.castdown_uncheck()})
         }))
     }
 }
@@ -30,7 +31,7 @@ macro_rules! mul {
             let mut itera = objs.into_iter();
             let one = itera.next().unwrap();
             let two = itera.next().unwrap();
-            Object::new(unsafe{Box::new(one.castdown::<$tr>()*two.castdown())})
+            Object::new(unsafe{one.castdown_uncheck::<$tr>()*two.castdown_uncheck()})
         }))
     }
 }
@@ -41,7 +42,7 @@ macro_rules! div {
             let mut itera = objs.into_iter();
             let one = itera.next().unwrap();
             let two = itera.next().unwrap();
-            Object::new(unsafe{Box::new(one.castdown::<$tr>()/two.castdown())})
+            Object::new(unsafe{one.castdown_uncheck::<$tr>()/two.castdown_uncheck()})
         }))
     }
 }
@@ -72,20 +73,20 @@ macro_rules! impl_obj {
                     }
                     5 => {
                         fn eq(objs:Vec<Object>) -> Object{
-                            Object::new(Box::new(easy_castdown::<$tr>(&objs,0) == easy_castdown(&objs,1)))
+                            Object::new((easy_castdown::<$tr>(&objs,0).unwrap() == easy_castdown(&objs,1).unwrap()))
                         }
                         Func::RustFunc(Box::new(eq))
                     },
                     6 => {
                         fn cmp(objs:Vec<Object>) -> Object{
-                            Object::new(Box::new(
+                            Object::new(
                                 if easy_castdown::<$tr>(&objs,0) > easy_castdown(&objs,1){
                                     0
                                 }else if easy_castdown::<$tr>(&objs,0) == easy_castdown(&objs,1){
                                     1
                                 }else{
                                     2
-                                }))
+                                })
                         }
                         Func::RustFunc(Box::new(cmp))
                     }
@@ -138,9 +139,9 @@ impl CriptyObj for (){
         todo!()
     }
 }
-impl<T:CriptyObj+'static> From<T> for Object{
+impl<T:CriptyObj+CriptyType+'static> From<T> for Object{
     fn from(s:T) -> Self{
-        Object::new(Box::new(s))
+        Object::new(s)
     }
 }
 impl<T> CriptyObj for Vec<T>{
@@ -153,7 +154,7 @@ impl<T> CriptyObj for Vec<T>{
                 let len = self.len();
                 Func::RustFunc(
                     Box::new(
-                        move |_|{Object::new(Box::new(len))}
+                        move |_|{Object::new(len)}
                     )
                 )
             }
