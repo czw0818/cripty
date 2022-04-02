@@ -101,7 +101,11 @@ impl VM{
                 let two = stack.pop().ok_or(())?;
                 stack.push(Object::new(one<two))
             }
-            _ => {}
+            IR::CALL => {
+                let address = stack.pop().ok_or(())?.castdown::<usize>();
+                todo!()
+            }
+            _=>{}
         }
         Ok(())
     }

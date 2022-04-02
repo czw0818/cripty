@@ -93,6 +93,9 @@ macro_rules! impl_obj {
                     _ => panic!()
                 }
             }
+            fn to_string(&self) -> String{
+                format!("{}",*self)
+            }
         }
     };
 }
@@ -113,6 +116,9 @@ impl CriptyObj for String{
     fn methods(&self,_index:i16) -> Func{
         todo!()
     }
+    fn to_string(&self) -> String{
+        self.clone()
+    }
 }
 impl CriptyObj for bool{
     fn field(&self,_:u8) -> Object{
@@ -128,6 +134,9 @@ impl CriptyObj for bool{
             false
         }
     }
+    fn to_string(&self) -> String{
+        format!("{}",*self)
+    }
 }
 impl CriptyObj for (){
     fn field(&self,_:u8) -> Object{
@@ -138,13 +147,16 @@ impl CriptyObj for (){
         // 你干嘛啊你
         todo!()
     }
+    fn to_string(&self) ->String{
+        "()".to_string()
+    }
 }
 impl<T:CriptyObj+CriptyType+'static> From<T> for Object{
     fn from(s:T) -> Self{
         Object::new(s)
     }
 }
-impl<T> CriptyObj for Vec<T>{
+impl<T:core::fmt::Debug> CriptyObj for Vec<T>{
     fn field(&self,_:u8) -> Object{
         ().into()
     }
@@ -175,6 +187,9 @@ impl<T> CriptyObj for Vec<T>{
             }
             _=>panic!()
         }
+    }
+    fn to_string(&self) ->String{
+        format!("{:?}",self)
     }
 }
 use std::ptr::{read, write};

@@ -1,6 +1,6 @@
 use std::{
     ops::{Add,Sub,Mul, Div},
-    ptr::{NonNull,read}, mem::forget
+    ptr::{NonNull,read}, mem::forget, fmt::Formatter
 };
 
 use std::cmp::Ordering;
@@ -48,6 +48,16 @@ impl Object{
         unsafe{&*self.0.as_ptr()}.bool()
     }
 }
+impl core::fmt::Debug for Object{
+    fn fmt(&self,f:&mut Formatter<'_>) ->Result<(),std::fmt::Error>{
+        write!(f,"Object(address:{:?},type:{:?},value:{:?})",
+        self.0,self.1,
+        unsafe{
+            self.0.as_ref().to_string()
+        });
+        Ok(())
+    }
+}
 // to make function easier
 pub fn easy_castdown<T>(objs:&Vec<Object>,index:usize) -> Result<T,()>{
     let obj = objs.get(index).ok_or(())?;
@@ -65,6 +75,7 @@ pub trait CriptyObj{
     fn bool(&self) -> bool{
         false
     }
+    fn to_string(&self) ->String;
 }
 impl dyn CriptyObj{
     pub unsafe fn castdown<T>(&self) -> &T{
