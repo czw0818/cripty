@@ -66,6 +66,11 @@ impl<T> Pool<T> {
         };
         self.cap = new_cap;
     }
+    pub fn load_from_vec(&mut self,other:Vec<T>){
+        for elem in other.into_iter(){
+            self.push(elem)
+        }
+    }
     #[allow(dead_code)]
     fn cap(&self) -> usize{self.cap}
     #[allow(dead_code)]

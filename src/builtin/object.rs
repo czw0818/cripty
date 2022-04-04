@@ -21,9 +21,9 @@ impl Object{
     pub unsafe fn castdown_uncheck<T>(&self) -> &T{
         self.0.as_ref().castdown::<T>()
     }
-    pub fn castdown<T:CriptyType>(&self) -> Result<&T,Box<dyn TypeError>>{
+    pub fn castdown<T:CriptyType>(&self) -> Result<&T,TypeError>{
         if !(T::typeid()==self.1){
-            return Err(Box::new(()));
+            return Err(TypeError);
         }
         unsafe{Ok(self.castdown_uncheck())}
     }
@@ -71,7 +71,12 @@ pub fn easy_castdown<T>(objs:&Vec<Object>,index:usize) -> Result<T,()>{
 //}
 pub trait CriptyObj{
     fn field(&self,index:u8) -> Object;
-    fn methods(&self,index:i16) -> Func;
+    /* the method of Object
+    -1 => call,
+    1 => add,2 => sub,3 => mul,4 => div,
+    5 => eq,6 => cmp
+    */
+    fn methods(&self,index:i16) -> Func; 
     fn bool(&self) -> bool{
         false
     }

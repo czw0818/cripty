@@ -23,4 +23,13 @@ mod test{
         GC::work_now(&mut scope);
         println!("{:?}",scope)
     }
+    #[test]
+    fn ir(){
+        use crate::runtime::ir_inner::VM;
+        use crate::IR;
+        let mut codes = vec![IR::PUSH(Object::new(2usize)),IR::PUSH(Object::new(2usize)),IR::ADD,IR::EQ,IR::QUIT];
+        let mut vm = VM::new();
+        vm.set_code(&mut codes);
+        assert!(vm.run().is_err());
+    }
 }

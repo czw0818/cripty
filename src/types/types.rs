@@ -2,8 +2,8 @@ use crate::Object;
 pub trait CriptyType{
     fn typeid() -> Typeid;
 }
-pub trait TypeError {}
-impl TypeError for (){}
+#[derive(Debug,Clone,Copy)]
+pub struct  TypeError;
 #[derive(Debug,Clone, Copy,PartialEq, Eq)]
 pub enum Typeid{
     Bool,

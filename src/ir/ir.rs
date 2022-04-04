@@ -17,8 +17,15 @@ pub enum IR {
     MORE,
     NE, // !=
     CALL,
-    RustFunc(Box<dyn Fn(Vec<Object>) -> Object>),
-    JUMP(usize),
+    AND,
+    OR,
+    NOT,
+    ME,// >=
+    LE,// <=
+    LOAD(usize),
+    RustFunc(fn(Vec<Object>) -> Object),
+    JUMP(isize),
     JUMPIF(usize),
-    JUMPIFNOT(usize)
+    JUMPIFNOT(usize),
+    QUIT,
 }
