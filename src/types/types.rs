@@ -1,5 +1,3 @@
-use std::fmt::Formatter;
-
 use crate::Object;
 pub trait CriptyType{
     fn typeid() -> Typeid;
