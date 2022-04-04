@@ -4,5 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
+[lib]
+name = "cripty"
 [dependencies]
+
+[profile.release]
+opt-level = "s" # Optimize for size
+strip = true
+lto = true
+panic = "abort"
