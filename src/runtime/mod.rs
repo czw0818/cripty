@@ -1,7 +1,7 @@
 pub mod ast_inter;
 pub mod ir_inner;
 use crate::memory::memory::Pool;
-use crate::object::*;
+use crate::*;
 
 
 struct Scope(Pool<Object>);

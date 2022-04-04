@@ -1,3 +1,4 @@
+#![allow(non_upper_case_globals)]
 static mut enable_GC:bool = true;
 static mut index_const:usize = 0;
 #[derive(Debug)]

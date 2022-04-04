@@ -1,16 +1,16 @@
-use crate::object::{Object};
+use crate::Object;
 use crate::types::Typeid;
 use crate::ir::ast::States;
 use crate::runtime::ast_inter::VM;
 
 pub struct CriptyFunc{
     pub name:Option<String>,
-    pub args:Vec<(Object,Typeid)>,
+    pub args:Vec<Typeid>,
     pub states:States
 }
 impl CriptyFunc{
     #[allow(dead_code)]
-    fn new(name:Option<String>,args:Vec<(Object,Typeid)>,states:States) -> Self{
+    fn new(name:Option<String>,args:Vec<Typeid>,states:States) -> Self{
         Self{
             name,
             args,
@@ -30,24 +30,24 @@ impl Clone for CriptyFunc{
     }
 }
 #[allow(dead_code)]
+#[derive(Clone)]
 pub enum Func{
     CriptyFunc(CriptyFunc),
-    RustFunc(Box<dyn Fn(Vec<Object>) -> Object + 'static>)
+    RustFunc(fn(Vec<Object>) -> Object),
+    RustConst(Object)
 }
 impl Func{
-    pub fn call(&self,objs:Vec<Object>,vm:* mut VM) -> Object{
+    pub fn call(&self,args:Vec<Object>,vm:* mut VM) -> Object{
         match self{
             Self::RustFunc(func)=>{
-                (**func)(objs)
+                func(args)
             }
             Self::CriptyFunc(func)=>{
-                func.call(objs,unsafe{&*vm})
+                func.call(args,unsafe{&*vm})
+            }
+            Self::RustConst(obj) => {
+                obj.clone()
             }
         }
-    }
-}
-impl Clone for Func{
-    fn clone(&self) -> Self{
-        unsafe{std::ptr::read(self)}
     }
 }

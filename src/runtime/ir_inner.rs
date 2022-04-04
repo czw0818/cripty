@@ -4,14 +4,14 @@ use crate::{Object, memory::memory::Pool, IR};
 
 #[derive(Debug,Clone)]
 struct VM{
-    stack:NonNull<Vec<Object>>,
-    scope:NonNull<Pool<Object>>,
-    code:NonNull<Vec<IR>>,
-    index:Cell<usize>
+    pub stack:NonNull<Vec<Object>>,
+    pub scope:NonNull<Pool<Object>>,
+    pub code:NonNull<Vec<IR>>,
+    pub index:Cell<usize>
 }
 
 impl VM{
-    fn new() -> Self{
+    pub fn new() -> Self{
         let v:Vec<Object> = vec![];
         let p:Pool<Object> =Pool::new();
         let ve = NonNull::new(&v as *const _ as *mut Vec<Object>).unwrap();
@@ -25,11 +25,11 @@ impl VM{
             index:Cell::new(0)
         }
     }
-    fn check_dangling(&self) -> bool{
+    pub fn check_dangling(&self) -> bool{
         self.code ==  NonNull::dangling()
     }
     /// push the code to code list
-    fn push_code(&self,codes:Vec<IR>){
+    pub fn push_code(&self,codes:Vec<IR>){
         let target = self.code.as_ptr();
         if self.check_dangling(){
             unsafe{*target = codes}
@@ -43,10 +43,10 @@ impl VM{
     }
     /// 'empty' can clean the code list
     /// but if the programmar is running,it will block programmar to continue to run
-    fn empty(&self){
+    pub fn empty(&self){
         unsafe{(*self.code.as_ptr()).clear()}
     }
-    fn run_once(&self,stack:&mut Vec<Object>,scope:&mut Pool<Object>,code:&IR) -> Result<(),()>{
+    pub fn run_once(&self,stack:&mut Vec<Object>,scope:&mut Pool<Object>,code:IR) -> Result<(),()>{
         match code {
             IR::ADD =>{
                 let one = stack.pop().ok_or(())?;
@@ -69,16 +69,16 @@ impl VM{
                 stack.push(one/two)
             }
             IR::JUMP(index) =>{
-                self.index.set(*index)
+                self.index.set(index)
             }
             IR::JUMPIF(index) =>{
                 if (stack.pop().ok_or(())?).bool(){
-                    self.index.set(*index)
+                    self.index.set(index)
                 }
             }
             IR::JUMPIFNOT(index) =>{
                 if !(stack.pop().ok_or(())?).bool(){
-                    self.index.set(*index)
+                    self.index.set(index)
                 }
             }
             IR::EQ =>{
@@ -101,20 +101,19 @@ impl VM{
                 let two = stack.pop().ok_or(())?;
                 stack.push(Object::new(one<two))
             }
-            IR::CALL => {
-                let address = stack.pop().ok_or(())?.castdown::<usize>();
-                todo!()
+            IR::PUSH(obj) => {
+                stack.push(obj)
             }
             _=>{}
         }
         Ok(())
     }
-    fn run(&self) -> Result<(),()>{
+    pub fn run(&self) -> Result<(),()>{
         if self.check_dangling(){return Err(());}
         let mut stack = unsafe{&mut*self.stack.as_ptr()};
         let mut scope =unsafe{&mut*self.scope.as_ptr()};
         let code =unsafe{&mut*self.code.as_ptr()};
-        self.run_once(&mut stack, &mut scope, code.get(self.index.get()).unwrap());
+        self.run_once(&mut stack, &mut scope, code.remove(self.index.get()));
         
         Ok(())
     }

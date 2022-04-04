@@ -54,7 +54,7 @@ impl core::fmt::Debug for Object{
         self.0,self.1,
         unsafe{
             self.0.as_ref().to_string()
-        });
+        }).unwrap();
         Ok(())
     }
 }
