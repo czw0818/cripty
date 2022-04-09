@@ -1,7 +1,5 @@
-use std::{ ptr::NonNull, mem::forget, cell::Cell};
-use crate::ir::ast::States;
-use crate::builtin::function::CriptyRE;
-use crate::{Object, memory::memory::Pool, IR};
+use std:: cell::Cell;
+use crate::{Object,MethodTableIndex as mt, IR};
 #[allow(non_camel_case_types)]
 #[derive(Debug)]
  pub enum WMErrorKind{
@@ -10,54 +8,45 @@ use crate::{Object, memory::memory::Pool, IR};
      STACK_OVER,
      PROGRAM_EXIT
  }
-#[derive(Debug,Clone)]
+ type Pool<T> = Vec<T>;
+#[derive(Debug)]
 pub struct VM{
-    pub stack:NonNull<Vec<Object>>,
-    pub scope:NonNull<Pool<Object>>,
-    pub code:NonNull<Vec<IR>>,
+    pub stack:Vec<Object>,
+    pub scope:Pool<Object>,
+    pub code:Vec<IR>,
     pub index:Cell<usize>
 }
 
 impl VM{
     pub fn new() -> Self{
-        let v:Vec<Object> = vec![];
-        let p:Pool<Object> =Pool::new();
-        let ve = NonNull::new(&v as *const _ as *mut Vec<Object>).unwrap();
-        let po = NonNull::new(&p as *const _ as *mut Pool<Object>).unwrap();
-        forget(v);
-        forget(p);
         Self{
-            stack:ve,
-            scope:po,
-            code:NonNull::dangling(),
+            stack:vec![],
+            scope:Pool::new(),
+            code:vec![],
             index:Cell::new(0)
         }
     }
-    pub fn check_dangling(&self) -> bool{
-        self.code ==  NonNull::dangling()
-    }
-    pub fn set_code(&mut self,codes:&mut Vec<IR>){
-        self.code = NonNull::new(codes).unwrap();
+    pub fn set_code(&mut self,codes:Vec<IR>){
+        self.code = codes;
     }
     /// push the code to code list
-    pub fn push_code(&self,codes:Vec<IR>){
-        let target = self.code.as_ptr();
-        if self.check_dangling(){
-            unsafe{*target = codes}
-        }else{
-            unsafe{
-                for i in codes{
-                    (*target).push(i)
-                }
-            }
-        };
+    pub fn push_code(&mut self,codes:Vec<IR>){
+        for i in codes{
+            self.code.push(i)
+        }
+
     }
     /// 'empty' can clean the code list
     /// but if the programmar is running,it will block programmar to continue to run
-    pub fn empty(&self){
-        unsafe{(*self.code.as_ptr()).clear()}
+    pub fn clear(&mut self){
+        unsafe{
+            self.code.set_len(0)
+        }
     }
-    pub fn run_once(&self,stack:&mut Vec<Object>,scope:&mut Pool<Object>,code:IR) -> Result<(),WMErrorKind>{
+    pub fn run_once(&mut self,code:IR) -> Result<(),WMErrorKind>{
+        Self::run_once_api(&mut self.stack,&mut self.scope,code,&self.index)
+    }
+    pub fn run_once_api(stack:&mut Vec<Object>,scope:&mut Pool<Object>,code:IR,index:&Cell<usize>) -> Result<(),WMErrorKind>{
         use WMErrorKind::*;
         match code {
             IR::POP => {
@@ -83,17 +72,17 @@ impl VM{
                 let two = stack.pop().ok_or(STACK_EMPTY)?;
                 stack.push(one/two)
             }
-            IR::JUMP(index) =>{
-                self.index.set((self.index.get() as isize+index) as usize)
+            IR::JUMP(ind) =>{
+                index.set((index.get() as isize+ind) as usize)
             }
-            IR::JUMPIF(index) =>{
+            IR::JUMPIF(inde) =>{
                 if (stack.pop().ok_or(STACK_EMPTY)?).bool(){
-                    self.index.set(index)
+                    index.set((index.get() as isize+inde) as usize)
                 }
             }
-            IR::JUMPIFNOT(index) =>{
+            IR::JUMPIFNOT(inde) =>{
                 if !(stack.pop().ok_or(STACK_EMPTY)?).bool(){
-                    self.index.set(index)
+                    index.set((index.get() as isize+inde) as usize)
                 }
             }
             IR::EQ =>{
@@ -132,7 +121,7 @@ impl VM{
             }
             IR::LOAD(addr)=>{
                 stack.push(scope.get(addr)
-                    .expect(&format!("(IR::LOAD)address({}) out of scope,line {}",addr,self.index.get())[..]))
+                    .expect(&format!("(IR::LOAD)address({}) out of scope,line {}",addr,index.get())[..]).clone())
             }
             IR::PUSH(obj) => {
                 stack.push(obj)
@@ -141,13 +130,15 @@ impl VM{
                 return Err(PROGRAM_EXIT)
             }
             IR::CALL =>{
-                let arg_n = *stack.pop().ok_or(STACK_EMPTY)?.castdown::<usize>()
+                let arg_n = *stack.pop().ok_or(STACK_EMPTY)?
+                    .castdown::<usize>()
                     .expect("(IR::CALL),i want to know the number of args ,but in stack,is not a usize");
                 let mut args = Vec::with_capacity(arg_n);
                 for _ in 0..arg_n{
                     args.push(stack.pop().ok_or(STACK_EMPTY)?)
                 }
-                let p = stack.pop().ok_or(STACK_EMPTY)?.method(-1).call(args, &CriptyRE::IR(self));
+                let p = stack.pop().ok_or(STACK_EMPTY)?
+                    .method(mt::Call.value()).call(args);
                 stack.push(p);
             }
             IR::RustFunc(func) =>{
@@ -165,13 +156,13 @@ impl VM{
                 let addr = *stack.pop().ok_or(STACK_EMPTY)?.castdown::<usize>()
                     .expect("(IR::READ),i want the addr to read,but is not usize");
                 stack.push(scope.get(addr)
-                    .expect(&format!("(IR::READ)address({}) out of scope,line {}",addr,self.index.get())[..]))
+                    .expect(&format!("(IR::READ)address({}) out of scope,line {}",addr,index.get())[..]).clone())
             }
             IR::WRITE => {
                 let addr = *stack.pop().ok_or(STACK_EMPTY)?.castdown::<usize>()
                     .expect("(IR::WRITE),i want the addr to write,but is not usize");
                 let value = stack.pop().ok_or(STACK_EMPTY)?;
-                scope.set(addr, value).expect("(IR::WRITE)failed in write scope")
+                scope[addr] = value;
             }
             IR::ME => {//>=
                 let one = stack.pop().ok_or(STACK_EMPTY)?;
@@ -186,41 +177,18 @@ impl VM{
         }
         Ok(())
     }
-    pub fn run_function_states(&self,states:States,args:Vec<Object>) -> Object{
-        let mut codes = Vec::new();
-        for stmt in states.into_iter(){
-            let irs:Vec<IR> = stmt.into();
-            codes.extend(irs.into_iter())
-        }
-        unsafe{&mut *self.code.as_ptr()}.extend(codes.into_iter());
-        unsafe{&mut *self.code.as_ptr()}.push(IR::QUIT);
-        let mut stack = unsafe{&mut*self.stack.as_ptr()};
-        let mut scope =unsafe{&mut*self.scope.as_ptr()};
-        scope.load_from_vec(args);
-        let code =unsafe{&mut*self.code.as_ptr()};
+    pub fn run(self) -> Result<(),WMErrorKind>{
+        let VM{
+            mut stack,
+            mut scope,
+            code,
+            index
+        } = self;
         loop{
-            match self.run_once(&mut stack, &mut scope, code.remove(self.index.get())){
-                Ok(_) =>{},
-                Err(kind) =>{
-                    match kind{
-                        WMErrorKind::PROGRAM_EXIT => {
-                            return stack.pop().unwrap_or(Object::null())
-                        }
-                        _ => panic!("VM panic at {:?}",kind)
-                    }
-                }
-            }
-            self.index.set(self.index.get()+1);
-        }
-    }
-    pub fn run(&self) -> Result<(),WMErrorKind>{
-        if self.check_dangling(){return Err(WMErrorKind::CODE_PTR_DANGLING);}
-        let mut stack = unsafe{&mut*self.stack.as_ptr()};
-        let mut scope =unsafe{&mut*self.scope.as_ptr()};
-        let code =unsafe{&mut*self.code.as_ptr()};
-        loop{
-            self.run_once(&mut stack, &mut scope, code.remove(self.index.get()))?;
-            self.index.set(self.index.get()+1);
+            let pc = index.get();
+            let new_code = code.get(pc).unwrap().clone();
+            Self::run_once_api(&mut stack,&mut scope,new_code,&index)?;
+            index.set(pc+1);
         }
     }
 

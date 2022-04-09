@@ -1,50 +1,17 @@
 use crate::builtin::object::easy_castdown;
 use crate::{Object,CriptyObj,Func};
-macro_rules! add {
-    ($tr:ty) => {
-        Func::RustFunc(|objs:Vec<Object>|{
-            dbg!("add function");
-            assert!(objs.len()==2);
-            let mut itera = objs.into_iter();
-            let one = itera.next().unwrap();
-            let two = itera.next().unwrap();
-            Object::new(unsafe{one.castdown_uncheck::<$tr>()+two.castdown_uncheck()})
-        })
-    }
-}
-macro_rules! sub {
-    ($tr:ty) => {
+macro_rules! funct_marco {
+    ($tr:ty,$op:tt) => {
         Func::RustFunc(|objs:Vec<Object>|{
             assert!(objs.len()==2);
             let mut itera = objs.into_iter();
             let one = itera.next().unwrap();
             let two = itera.next().unwrap();
-            Object::new(unsafe{one.castdown_uncheck::<$tr>()-two.castdown_uncheck()})
+            Object::new(unsafe{one.castdown_uncheck::<$tr>() $op two.castdown_uncheck()})
         })
     }
 }
-macro_rules! mul {
-    ($tr:ty) => {
-        Func::RustFunc(|objs:Vec<Object>|{
-            assert!(objs.len()==2);
-            let mut itera = objs.into_iter();
-            let one = itera.next().unwrap();
-            let two = itera.next().unwrap();
-            Object::new(unsafe{one.castdown_uncheck::<$tr>()*two.castdown_uncheck()})
-        })
-    }
-}
-macro_rules! div {
-    ($tr:ty) => {
-        Func::RustFunc(|objs:Vec<Object>|{
-            assert!(objs.len()==2);
-            let mut itera = objs.into_iter();
-            let one = itera.next().unwrap();
-            let two = itera.next().unwrap();
-            Object::new(unsafe{one.castdown_uncheck::<$tr>()/two.castdown_uncheck()})
-        })
-    }
-}
+
 
 macro_rules! impl_obj {
     ($tr:ty) => {
@@ -53,22 +20,22 @@ macro_rules! impl_obj {
                 // should never be used 
                 ().into()
             }
-            fn methods(&self,index:i16) -> Func{
+            fn methods(&self,index:u16) -> Func{
                 match index{
                     0 => {
                         Func::RustFunc(|_|{Object::null()})
                     }
                     1 => {
-                        add!($tr)
+                        funct_marco!($tr,+)
                     }
                     2 => {
-                        sub!($tr)
+                        funct_marco!($tr,-)
                     }
                     3 => {
-                        mul!($tr)
+                        funct_marco!($tr,*)
                     }
                     4 => {
-                        div!($tr)
+                        funct_marco!($tr,/)
                     }
                     5 => {
                         fn eq(objs:Vec<Object>) -> Object{

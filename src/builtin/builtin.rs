@@ -6,7 +6,7 @@ impl CriptyObj for String{
     fn field(&self,_:u8) -> Object{
         Object::null()
     }
-    fn methods(&self,_index:i16) -> Func{
+    fn methods(&self,_index:u16) -> Func{
         todo!()
     }
     fn to_string(&self) -> String{
@@ -17,7 +17,7 @@ impl CriptyObj for bool{
     fn field(&self,_:u8) -> Object{
         Object::null()
     }
-    fn methods(&self,_index:i16) -> Func{
+    fn methods(&self,_index:u16) -> Func{
         todo!()
     }
     fn bool(&self) -> bool{
@@ -36,7 +36,7 @@ impl CriptyObj for (){
         //你要访问这个干嘛啊你
         Object::null()
     }
-    fn methods(&self,_:i16) -> Func{
+    fn methods(&self,_:u16) -> Func{
         // 你干嘛啊你
         todo!()
     }
@@ -53,12 +53,12 @@ impl<T:core::fmt::Debug> CriptyObj for Vec<T>{
     fn field(&self,_:u8) -> Object{
         Object::null()
     }
-    fn methods(&self,index:i16) -> Func{
+    fn methods(&self,index:u16) -> Func{
         match index{
-            -1 => {// len
+            0 => {// len
                 Func::RustConst(Object::new(self.len()))
             }
-            -2 => {// swap
+            1 => {// swap
                 Func::RustFunc(
                         |this:Vec<Object>|{
                             let vec = easy_castdown::<Vec<T>>(&this, 0).unwrap();

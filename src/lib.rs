@@ -8,7 +8,7 @@ pub use crate::builtin::object::*;
 pub use crate::builtin::function::Func;
 pub use crate::ir::ast::{State,States};
 pub use crate::ir::ir::IR;
-pub use crate::memory::memory::{Pool,Variable};
+// pub use crate::memory::memory::{Pool,Variable};
 
 #[cfg(test)]
 mod test{
@@ -27,9 +27,19 @@ mod test{
     fn ir(){
         use crate::runtime::ir_inner::VM;
         use crate::IR;
-        let mut codes = vec![IR::PUSH(Object::new(2usize)),IR::PUSH(Object::new(2usize)),IR::ADD,IR::EQ,IR::QUIT];
+        let codes = vec![
+            IR::PUSH(Object::new(2usize)),
+            IR::PUSH(Object::new(2usize)),
+            IR::ADD,
+            IR::PUSH(Object::new(4usize)),
+            IR::EQ,                       
+            IR::JUMPIFNOT(2),             
+            IR::QUIT,                     
+            IR::RustFunc(|_|{eprintln!("2+2!=4");Object::null()}),
+            IR::JUMPIFNOT(-2)
+        ];
         let mut vm = VM::new();
-        vm.set_code(&mut codes);
+        vm.set_code(codes);
         assert!(vm.run().is_err());
     }
 }

@@ -1,7 +1,7 @@
 use crate::Object;
 
 #[allow(dead_code)]
-//#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub enum IR {
     ADD,// +
     SUB,// -
@@ -25,7 +25,7 @@ pub enum IR {
     LOAD(usize),
     RustFunc(fn(Vec<Object>) -> Object),
     JUMP(isize),
-    JUMPIF(usize),
-    JUMPIFNOT(usize),
+    JUMPIF(isize),
+    JUMPIFNOT(isize),
     QUIT,
 }
